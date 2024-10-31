@@ -1,0 +1,33 @@
+DELIMITER //
+
+CREATE PROCEDURE InsertFromJSON(IN json_input JSON, OUT result_code INT)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        -- In case of any error, rollback and set result_code to 0 (failure)
+        ROLLBACK;
+        SET result_code = 0;
+    END;
+
+    -- Start a transaction
+    START TRANSACTION;
+
+    -- Extract values from JSON input
+    DECLARE var_field1 VARCHAR(255);
+    DECLARE var_field2 INT;
+    DECLARE var_field3 DATE;
+
+    SET var_field1 = JSON_UNQUOTE(JSON_EXTRACT(json_input, '$.field1'));
+    SET var_field2 = JSON_UNQUOTE(JSON_EXTRACT(json_input, '$.field2'));
+    SET var_field3 = JSON_UNQUOTE(JSON_EXTRACT(json_input, '$.field3'));
+
+    -- Insert values into the table
+    INSERT INTO sample_table (field1, field2, field3)
+    VALUES (var_field1, var_field2, var_field3);
+
+    -- If no errors, commit and set result_code to 1 (success)
+    COMMIT;
+    SET result_code = 1;
+END //
+
+DELIMITER ;
